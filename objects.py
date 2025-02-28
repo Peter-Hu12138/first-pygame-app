@@ -64,8 +64,8 @@ class Manager:
                 self.obstacles.remove(obstacle)
 
     def update_speed(self):
-        for object in self.run_time_settings:
-            object.speed += 0.005
+        for setting in self.run_time_settings:
+            setting.update_speed()
     
     def draw(self, screen):
         for obstacle in self.obstacles:
@@ -73,6 +73,9 @@ class Manager:
 
     def reset(self):
         self.obstacles = []
+        for i in range(len(self.run_time_settings)):
+            self.run_time_settings[i].speed = self.initial_settings[i].speed
+        # reset speed settings
 
     def any_collide_with(self, rect: pygame.Rect):
         for obstacle in self.obstacles:
