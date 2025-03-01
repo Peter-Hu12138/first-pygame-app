@@ -48,13 +48,19 @@ snail_rect = snail.get_rect(bottomleft=(800, 300))
 snail_speed = 1
 snail_respawning_prob = 0.01
 bird = pygame.image.load("./graphics/Fly/Fly1.png").convert_alpha()
-obstacle_manager.add_object(bird, 4, 100)
+obstacle_manager.add_object(bird, 8, 100)
 obstacle_manager.add_object(snail, 2, 300)
 
 
-player_stand_surf = pygame.transform.rotozoom(pygame.image.load("./graphics/Player/player_stand.png"), 0, 2).convert_alpha()
-player_surface = pygame.image.load("./graphics/Player/player_walk_1.png").convert_alpha()
+player_over_surf = pygame.transform.rotozoom(pygame.image.load("./graphics/Player/player_stand.png"), 0, 2).convert_alpha()
+player_stand_surf = pygame.image.load("./graphics/Player/player_stand.png").convert_alpha()
+player_surface = player_stand_surf
 player_rect = player_surface.get_rect(bottomleft=(100, 300))
+player_walk_1 = pygame.image.load("./graphics/Player/player_walk_1.png").convert_alpha()
+player_walk_2 = pygame.image.load("./graphics/Player/player_walk_2.png").convert_alpha()
+player_walk = [player_walk_1, player_walk_2]
+player_walk_index = 0
+player_jump = pygame.image.load("./graphics/Player/jump.png").convert_alpha()
 player_vy = 0
 
 # game settings and constants
@@ -76,7 +82,7 @@ while True:
         if game_state == "ONG":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if player_rect.collidepoint(event.pos) and event.button == pygame.BUTTON_LEFT:
-                    player_vy -= JUMP_V
+                    player_vy = -JUMP_V
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and player_rect.bottom == 300:
@@ -129,15 +135,29 @@ while True:
             player_rect.right = 0
         elif player_rect.right < 0:
             player_rect.left = WIDTH
-                
+        
+        # move player according to input
         if keys[pygame.K_d]:
             player_rect.left += 4
-        elif keys[pygame.K_a]:
+        if keys[pygame.K_a]:
             player_rect.left -= 4
 
         if player_rect.bottom < 300:
             player_vy += GRAVITY_CONSTANT
+            player_surface = player_jump
         else: # readjust the position to be on the ground
+            if keys[pygame.K_a] and keys[pygame.K_d]:
+                player_surface = player_stand_surf
+            elif keys[pygame.K_d]:
+                player_walk_index += 0.05
+                player_surface = player_walk[int(player_walk_index) % 2]
+            elif keys[pygame.K_a]:
+                player_walk_index -= 0.05
+                player_surface = player_walk[int(player_walk_index) % 2]
+            else:
+                player_surface = player_stand_surf
+            
+
             if player_vy > 0: # on the ground falling results in a stop
                 player_vy = 0
                 player_rect.bottom = 300
@@ -150,12 +170,12 @@ while True:
         player_rect.bottom += player_vy
     elif game_state == "OVR":
         main_screen.fill("pink")
-        main_screen.blit(player_stand_surf, player_stand_surf.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
+        main_screen.blit(player_over_surf, player_over_surf.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
         display_text_at(main_screen, f"score: {score}", game_font, WIDTH // 2, HEIGHT * 4 // 5)
         main_screen.blit(over_text_surf, over_text_rect)
     elif game_state == "STR":
         main_screen.fill("pink")
-        main_screen.blit(player_stand_surf, player_stand_surf.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
+        main_screen.blit(player_over_surf, player_over_surf.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
         display_text_at(main_screen, f"PixelRunner", game_font, WIDTH // 2, HEIGHT * 1 // 5)
         display_text_at(main_screen, "Press the key s to start", game_font, WIDTH // 2, HEIGHT * 5 // 6)
     
