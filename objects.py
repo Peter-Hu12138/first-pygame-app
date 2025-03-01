@@ -3,18 +3,27 @@ import pygame
 import random
 
 class Obstacle:
-    surf: pygame.surface.Surface
+    surf: pygame.Surface
+    surf_list: list[pygame.Surface]
+    surf_index: float
     rect: pygame.rect.Rect
     speed: float
 
-    def __init__(self, surf: pygame.surface.Surface, rect: pygame.rect.Rect, speed: float):
-        self.surf = surf
+    def __init__(self, surf_list: list[pygame.Surface], rect: pygame.rect.Rect, speed: float):
+        self.surf_list = surf_list
+        self.surf_index = 0
+        self.surf = self.surf_list[self.surf_index]
         self.rect = rect
+        
         self.speed = speed
     
     def move(self) -> None:
         self.rect.left -= self.speed
+        self.anime()
 
+    def anime(self):
+        self.surf_index += self.speed / 50
+        self.surf = self.surf_list[int(self.surf_index) % len(self.surf_list)]
 
     def out_boundary(self) -> bool:
         return self.rect.right <= -100
@@ -23,7 +32,7 @@ class Obstacle:
 
 @dataclass
 class Setting:
-    surf: pygame.Surface
+    surf: list[pygame.Surface]
     speed: float
     spawn_height: int
 
@@ -45,16 +54,16 @@ class Manager:
         self.initial_settings = []
         self.display_width = width
 
-    def add_object(self, surf: pygame.surface.Surface, speed: float, spwan_height: int):
-        self.run_time_settings.append(Setting(surf, speed, spwan_height))
-        self.initial_settings.append(Setting(surf, speed, spwan_height))
+    def add_object(self, surf_list: pygame.surface.Surface, speed: float, spwan_height: int):
+        self.run_time_settings.append(Setting(surf_list, speed, spwan_height))
+        self.initial_settings.append(Setting(surf_list, speed, spwan_height))
 
     def spawn(self):
         rand_setting = self.run_time_settings[random.randint(0, len(self.run_time_settings) - 1)]
-        spwaned_surf = rand_setting.surf
+        spwaned_surf_list = rand_setting.surf
         spwaned_x_pos = random.randint(self.display_width * 1.1 // 1, self.display_width * 1.2 // 1)
-        initial_rect = spwaned_surf.get_rect(bottomleft=(spwaned_x_pos, rand_setting.spawn_height))
-        new_obstacle = Obstacle(surf=spwaned_surf, rect=initial_rect, speed=rand_setting.speed)
+        initial_rect = spwaned_surf_list[0].get_rect(bottomleft=(spwaned_x_pos, rand_setting.spawn_height))
+        new_obstacle = Obstacle(surf_list=spwaned_surf_list, rect=initial_rect, speed=rand_setting.speed)
         self.obstacles.append(new_obstacle)
 
     def update_position(self):
@@ -62,7 +71,7 @@ class Manager:
             obstacle.move()
             if obstacle.out_boundary(): # remove if object out of frame
                 self.obstacles.remove(obstacle)
-
+            
     def update_speed(self):
         for setting in self.run_time_settings:
             setting.update_speed()

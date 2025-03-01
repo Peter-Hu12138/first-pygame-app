@@ -43,13 +43,10 @@ ground_surface = pygame.image.load("./graphics/ground.png").convert_alpha()
 ground_rect = ground_surface.get_rect(topleft=(0, 300))
 
 obstacle_manager = Manager(WIDTH)
-snail = pygame.image.load("./graphics/snail/snail1.png").convert_alpha()
-snail_rect = snail.get_rect(bottomleft=(800, 300))
-snail_speed = 1
-snail_respawning_prob = 0.01
-bird = pygame.image.load("./graphics/Fly/Fly1.png").convert_alpha()
-obstacle_manager.add_object(bird, 8, 100)
-obstacle_manager.add_object(snail, 2, 300)
+snail_surf_list = [pygame.image.load("./graphics/snail/snail1.png").convert_alpha(), pygame.image.load("./graphics/snail/snail2.png").convert_alpha()]
+bird_surf_list = [pygame.image.load("./graphics/Fly/Fly1.png").convert_alpha(), pygame.image.load("./graphics/Fly/Fly2.png").convert_alpha()]
+obstacle_manager.add_object(bird_surf_list, 8, 100)
+obstacle_manager.add_object(snail_surf_list, 2, 300)
 
 
 player_over_surf = pygame.transform.rotozoom(pygame.image.load("./graphics/Player/player_stand.png"), 0, 2).convert_alpha()
@@ -91,9 +88,11 @@ while True:
             if event.type == obstacle_timer:
                 obstacle_manager.spawn()
                 print("spwaning")
-                print(f"number of obstacles {obstacle_manager.obstacles.__len__()}") 
+                print(f"number of obstacles {obstacle_manager.obstacles.__len__()}")
+                
             if event.type == speed_timer:
                 obstacle_manager.update_speed()
+                
         elif game_state == "OVR":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 game_state = "ONG"
@@ -118,19 +117,11 @@ while True:
         main_screen.blit(ground_surface, ground_rect)
 
         display_text_at(main_screen, f"score: {get_curr_score()}", game_font, WIDTH // 2, 50)
-        # main_screen.blit(snail, snail_rect)
-        obstacle_manager.update_position()
+
         obstacle_manager.draw(main_screen)
         main_screen.blit(player_surface, player_rect)
         
-        # if snail_rect.right <= 0: # replace snail if out frame
-        #     snail_rect.left = 800
-        # else:
-        #     snail_rect.left -= snail_speed
-
-        # if FASTER_SNAIL:
-        #     snail_speed += 0.01
-
+        obstacle_manager.update_position()
         if player_rect.left > WIDTH: # replace player if out frame
             player_rect.right = 0
         elif player_rect.right < 0:
@@ -162,12 +153,13 @@ while True:
                 player_vy = 0
                 player_rect.bottom = 300
 
+        # grav
+        player_rect.bottom += player_vy
 
         if obstacle_manager.any_collide_with(player_rect):
             game_state = "OVR"
             score = get_curr_score()
-
-        player_rect.bottom += player_vy
+        
     elif game_state == "OVR":
         main_screen.fill("pink")
         main_screen.blit(player_over_surf, player_over_surf.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
